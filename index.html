@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-key="title">Uzay Havası Görevi - Berke Demir & Furkan Yıldız</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* ========================================================= */
+        /* 1. GENEL VE SCROLLBAR */
+        /* ========================================================= */
+        body {
+            box-sizing: border-box;
+            font-family: 'Orbitron', sans-serif; 
+            font-weight: 400; 
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a; 
+            color: white; 
+            overflow-x: hidden;
+            min-height: 100vh;
+            cursor: default;
+        }
+        
+        /* Özel Scrollbar */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #090a0f; }
+        ::-webkit-scrollbar-thumb { 
+            background: linear-gradient(180deg, #00d4ff, #ff00ff); 
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #ff00ff, #00d4ff); } 
+
+        /* ========================================================= */
+        /* 2. SABİT ARAYÜZ ELEMANLARI (HUD, DİL ve TRACKER) */
+        /* ========================================================= */
+        /* HUD CSS'i Sadece Saat/Tarih Görüntülemek Üzere Sadeleştirildi */
+        .hud-display {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #00d4ff;
+            border-radius: 5px;
+            color: #00d4ff;
+            font-size: 0.9rem;
+            font-weight: 700;
+            z-index: 1000;
+            text-shadow: 0 0 8px rgba(0, 212, 255, 0.7);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* İlerleme Takipçisi (Progress Tracker) */
+        .progress-tracker {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #ff00ff;
+            border-radius: 5px;
+            color: #ff00ff;
+            font-size: 0.8rem;
+            font-weight: 700;
+            z-index: 1000;
+            text-shadow: 0 0 5px rgba(255, 0, 255, 0.8);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+            text-align: center;
+            width: 80px;
+        }
+        .progress-tracker div {
+            margin-bottom: 5px;
+            font-size: 1.2rem;
+        }
+
+        /* Dil ve Ses Değiştirme Kapsayıcısı */
+        .lang-switch-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+        /* Dil Butonu Stili */
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid #00d4ff;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .lang-btn.active {
+            background: linear-gradient(45deg, #00d4ff, #ff00ff);
+            border-color: #ff00ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.7);
+        }
+
+        /* Arka Plan Müziği Butonu Stili */
+        .sound-toggle-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid #ffff00;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            line-height: 1; 
+        }
+
+        .sound-toggle-btn.muted {
+            background: rgba(255, 0, 0, 0.3);
+            border-color: #ff0000;
+        }
+
+        .sound-toggle-btn.unmuted {
+            background: rgba(0, 255, 0, 0.3);
+            border-color: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        /* YENİ EKLENDİ: Sesli Okuma Butonu */
+        .read-tts-btn {
+            background: #ff00ff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+            margin-left: 10px;
+        }
+        .read-tts-btn:hover {
+            background: #00ffff;
+            box-shadow: 0 0 15px #00ffff;
+        }
+        /* Okuma Aktifken Buton Stili */
+        .read-tts-btn.active-reading {
+            background: #ff0000;
+            box-shadow: 0 0 15px #ff0000;
+        }
+
+        /* ========================================================= */
+        /* 3. ARKA PLAN VE PARALLAX */
+        /* ========================================================= */
+        .space-background, .stars, .grid-overlay {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            transition: transform 0.1s linear; 
+            will-change: transform; 
+            pointer-events: none; 
+        }
+        .space-background { 
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); 
+            z-index: -3; 
+        }
+        .stars {
+            z-index: -2; 
+        }
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            transition: opacity 0.5s;
+            animation: twinkle 3s infinite alternate;
+        }
+        .star.small { width: 1px; height: 1px; }
+        .star.medium { width: 2px; height: 2px; }
+        .star.large { width: 3px; height: 3px; }
+        @keyframes twinkle {
+            from { opacity: 0.4; }
+            to { opacity: 1; }
+        }
+        .grid-overlay {
+            z-index: -1; 
+            background-image: 
+                linear-gradient(to right, rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.2;
+        }
+        .container {
+            position: relative; 
+            z-index: 5; 
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 100px 20px 50px;
+        }
+        
+        /* ========================================================= */
+        /* 4. BAŞLIKLAR VE HİKAYE KUTUSU */
+        /* ========================================================= */
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            text-shadow: 0 0 15px rgba(255, 0, 255, 0.8), 0 0 15px rgba(0, 255, 255, 0.8);
+        }
+        .header h1 {
+            font-size: 4rem;
+            color: #00ffff;
+            margin: 0;
+            border-bottom: 2px solid #ff00ff;
+            padding-bottom: 10px;
+            display: inline-block;
+            animation: neon-glow 1.5s infinite alternate;
+        }
+        @keyframes neon-glow {
+            from { box-shadow: 0 0 5px #ff00ff, 0 0 5px #00ffff; }
+            to { box-shadow: 0 0 15px #ff00ff, 0 0 15px #00ffff; }
+        }
+        .header p {
+            font-size: 1.2rem;
+            color: #ccc;
+            margin-top: 10px;
+        }
+        .single-story-card {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+        .story-header {
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .story-title {
+            color: #ffff00;
+            text-transform: uppercase;
+            text-shadow: 0 0 5px #ffff00;
+        }
+        .chapters-container {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+        
+        /* ========================================================= */
+        /* BÖLÜM RESMİ YERİ STİLİ */
+        /* ========================================================= */
+        .chapter-image-spot {
+            margin: 40px auto;
+            max-width: 600px;
+            padding: 20px;
+            border: 2px solid #ffff00; 
+            border-radius: 10px;
+            background: rgba(40, 0, 40, 0.7); 
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.5), 0 0 5px rgba(255, 0, 255, 0.5);
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .chapter-image-spot img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            border: 1px solid #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            transition: transform 0.5s;
+        }
+        .chapter-image-spot img:hover {
+            transform: scale(1.02);
+        }
+        .image-caption {
+            margin-top: 15px;
+            font-size: 1rem;
+            color: #00ffff;
+            font-weight: 700;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        /* ========================================================= */
+        /* 6. HİKAYE KARTLARI (3D TILT EFEKTİ) */
+        /* ========================================================= */
+        .chapter {
+            background: rgba(10, 20, 30, 0.9);
+            border: 2px solid #00d4ff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 212, 255, 0.5);
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+            transform-style: preserve-3d;
+            transform: perspective(1500px) rotateX(var(--rotateX, 0deg)) rotateY(var(--rotateY, 0deg));
+            position: relative; 
+            overflow: hidden; 
+            --rotateX: 0deg;
+            --rotateY: 0deg;
+        }
+        .chapter::before {
+            content: 'GÖREV GÜNLÜĞÜ';
+            position: absolute;
+            top: 5px;
+            right: 15px;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.3);
+        }
+        .chapter-header {
+            color: #00ffff;
+            font-size: 1.8rem;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 5px #00ffff;
+        }
+        .chapter-content {
+            font-family: Arial, sans-serif; 
+            font-weight: 400;
+            font-size: 1.1rem;
+            color: #b0c4de;
+            line-height: 1.8;
+        }
+        .chapter-content strong {
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff;
+        }
+
+        /* ========================================================= */
+        /* 5. MESLEK ETKİLERİ SEKMESİ VE HOLOGRAFİK GRAFİK */
+        /* ========================================================= */
+        .profession-impact-section {
+            margin: 50px 0;
+            padding: 30px;
+            background: rgba(10, 10, 40, 0.95); 
+            border-radius: 20px;
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.8);
+            position: relative;
+            z-index: 2; 
+        }
+        .profession-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .profession-btn {
+            padding: 10px 20px;
+            border: 1px solid #00ffff;
+            background: rgba(0, 255, 255, 0.2);
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .profession-btn:hover {
+            background: #00ffff;
+            color: #0a0a0a;
+            box-shadow: 0 0 10px #00ffff;
+        }
+        .profession-btn.active {
+            background: #ff00ff;
+            border-color: #ff00ff;
+            box-shadow: 0 0 15px #ff00ff;
+        }
+        .impact-content {
+            display: flex; 
+            gap: 20px;
+            align-items: center; 
+            justify-content: space-between; 
+            border: 1px dashed rgba(0, 255, 255, 0.5);
+            padding: 25px;
+            border-radius: 10px;
+            min-height: 120px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        .impact-text {
+            flex-grow: 1;
+            text-align: left;
+        }
+        /* HOLOGRAFİK GRAFİK STİLLERİ */
+        .holographic-chart {
+            width: 150px;
+            height: 150px;
+            border: 2px solid #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            padding: 10px;
+            position: relative;
+            display: flex;
+            flex-direction: column-reverse; 
+            align-items: center;
+            overflow: hidden;
+            flex-shrink: 0;
+            filter: drop-shadow(0 0 5px var(--risk-color, #00ff00)); 
+            transition: filter 0.5s;
+        }
+        .risk-bar {
+            width: 80%;
+            height: var(--risk-height, 0%); 
+            background: linear-gradient(to top, var(--risk-color, #00ff00), rgba(255, 255, 255, 0.5));
+            transition: height 1s ease-out, background 0.5s;
+            border-top: 2px solid var(--risk-color, #00ff00);
+            position: absolute;
+            bottom: 0;
+            border-radius: 2px 2px 0 0;
+            animation: bar-glow 1s infinite alternate;
+        }
+        .risk-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--risk-color, #00ff00);
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--risk-color, #00ff00);
+            z-index: 10;
+        }
+        @keyframes bar-glow {
+            from { opacity: 0.9; }
+            to { opacity: 1.0; }
+        }
+        
+        /* ========================================================= */
+        /* 7. RESPONSIVE DÜZENLEMELER */
+        /* ========================================================= */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2.5rem; }
+            .hud-display { top: 5px; padding: 10px 15px; left: 5px; } 
+            .lang-switch-container { right: 5px; }
+            .progress-tracker { right: 5px; transform: translateY(-50%) scale(0.8); }
+            .impact-content { flex-direction: column; align-items: center; }
+            .holographic-chart { margin-top: 15px; }
+            .impact-text { text-align: center; }
+            .profession-buttons { flex-direction: column; gap: 10px;}
+            .profession-btn { width: 100%; }
+        }
+
+    </style>
+</head>
+<body>
+    
+
+    <div class="space-background"></div>
+    <div class="stars" id="stars-container"></div>
+    <div class="grid-overlay"></div> 
+    
+    <div id="hud-time-date" class="hud-display"></div>
+    
+    <div id="mission-progress-tracker" class="progress-tracker">
+        <div id="progress-text"></div>
+        <small>MISSION STATUS</small>
+    </div>
+
+    <div class="lang-switch-container">
+        <button id="sound-toggle" class="sound-toggle-btn muted" onclick="toggleSound()">🔇 SES</button>
+        <button class="lang-btn active" onclick="playClickSound(); toggleLanguage('tr')">TR</button>
+        <button class="lang-btn" onclick="playClickSound(); toggleLanguage('en')">EN</button>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <h1 data-key="example-title">UZAY HAVASI GÖREVİ</h1>
+            <p data-key="main-subtitle">Alper Gezeravcı’nın verdiği görev: Uzay Havasının Mesleklere Etkisi</p>
+        </header>
+
+        <section class="single-story-card">
+            <div class="story-header">
+                <h3 class="story-title" data-key="story-section-title">HİKAYE BÖLÜMLERİ</h3>
+                <p class="story-author"><span class="translation-key" data-key="by">Yazar:</span> <span data-key="example-author">Berke Demir & Furkan Yıldız</span></p>
+                <span class="story-category"><span class="translation-key" data-key="category">Kategori:</span> <span data-key="category-space">Uzay</span></span>
+            </div>
+            
+            <div id="chaptersContainer" class="chapters-container">
+                </div>
+        </section>
+    </div>
+
+    <script>
+        // Ses Efekti Objesi
+        const clickSound = new Audio('sci-fi-click.mp3'); 
+        
+        function playClickSound() {
+            clickSound.currentTime = 0; 
+            clickSound.volume = 0.5; 
+            clickSound.play().catch(e => { /* Hata yok sayılır */ });
+        }
+
+        // YENİ: Arka Plan Müziği Objesi
+        let bgMusic; 
+
+
+
+        // ====================================================================
+        // VERİ YAPILARI (Çeviriler, Meslekler)
+        // ====================================================================
+        const translations = { 
+            'tr': {
+                'title': 'Uzay Havası Görevi - Berke Demir & Furkan Yıldız',
+                'example-title': 'UZAY HAVASI GÖREVİ',
+                'main-subtitle': 'Alper Gezeravcı’nın verdiği görev: Uzay Havasının Mesleklere Etkisi',
+                'by': 'Yazar:',
+                'category': 'Kategori:',
+                'category-space': 'Uzay',
+                'example-author': 'Berke Demir & Furkan Yıldız',
+                'story-section-title': 'HİKAYE BÖLÜMLERİ',
+                'impact-title-main': 'UZAY HAVASININ MESLEKLERE ETKİSİ',
+                'impact-subtitle': 'Detaylı Görev Raporu',
+                'initial-impact-message': 'Yukarıdaki mesleklerden birini seçerek Uzay Havasının etkilerini detaylı incele. (Risk Analizini Gör)',
+                'pilot-title': 'Pilotlar: Uçuş Güvenliği ve Radyasyon',
+                'pilot-content': 'Özellikle **kutup bölgesine yakın uçuşlarda** güneşten gelen **radyasyon seviyesi artar**, bu da yolcular ve pilotlar için risklidir. Ayrıca uçakların **telsiz sistemleri bozulabilir**, rotaların değiştirilmesini gerektirir.',
+                'farmer-title': 'Çiftçiler: GPS ve Tarım Teknolojisi',
+                'farmer-content': 'Tarımda kullanılan **hassas GPS sistemleri bozulabilir**, bu da ekim, gübreleme ve hasat zamanlamasını olumsuz etkileyebilir.',
+                'astronaut-title': 'Astronotlar: Uzayda Can Güvenliği',
+                'astronaut-content': 'Güneş patlamaları sırasında **radyasyon seviyesi kritik ölçüde artar**. Astronotlar, önceden haber verilirse uzay aracının **korunaklı bölgelerine çekilmek** zorundadır. Bu yüzden uzay havası tahminlerini sürekli takip ederler.',
+                'comm_tech-title': 'İletişim Teknisyenleri: Uydu ve Şebeke Arızaları',
+                'comm_tech-content': '**Uydu, GPS, telsiz** ve yerdeki **elektrik şebekeleri** gibi kritik iletişim ve enerji altyapılarında **bozulmalara ve kesintilere** neden olabilir. Bu sistemlerin sürekli izlenmesi gerekir.',
+                'chapter-1-image-caption': 'Kağan, balkonunda yıldızlara bakarken astronot olma hayalleri kuruyor.',
+                'chapter-3-image-caption': 'Kagan, dedesiyle uzay havası hakkında konuşuyor.', 
+                'chapter-5-image-caption': 'Kagan,Alper Gezeravcıya dosyayı teslim ediyor.', 
+                'chapter-7-image-caption': 'Kağan ve Alper Gezeravcı Norveç’te kuzey ışıklarını hayranlıkla izliyor.', 
+                'example-chapter-1-title': 'Bölüm 1: Gökyüzüne Açılan Kapı',
+                'example-chapter-1-content': `Kağan, 12 yaşında, meraklı mı meraklı bir çocuktu. Geceleri balkonda oturur, gözünü gökyüzüne diker ve hayaller kurardı. Yıldızlar ona birer dost gibi gelirdi. En büyük hayali bir gün astronot olmak ve gökyüzünün ötesine geçmekti. Bir gün, televizyonda gördüğü bir haberle kalbi küt küt atmaya başladı. Türkiye'nin ilk astronotu Alper Gezeravcı, uzay görevinden dönmüş ve İstanbul'da halka açık bir konferans verecekti. Konuşma bitiminde, Kağan cesaretini toplayarak Alper Gezeravcı’nın yanına gitti ve sordu: “Alper abi, uzay havası tam olarak nedir? Ve dünyamızı nasıl etkiliyor?” Alper Gezeravcı, Kağan’a özel bir görev verdi: *Uzay havasının farklı meslekleri nasıl etkilediğini araştır!*`,
+                'example-chapter-2-title': 'Bölüm 2: Bilimsel Serüven Başlıyor',
+                'example-chapter-2-content': `Kağan, o gece heyecandan uyuyamadı. Ertesi sabah erkenden kalktı ve bilgisayarını açarak araştırmaya başladı. Bilimsel makaleleri okudu, videolar izledi, notlar aldı. Araştırmasına göre, uzay havası Güneş'teki patlamalar sonucu ortaya çıkan enerji ve parçacık akımlarıdır. Bu parçacıklar Dünya’nın manyetik alanıyla çarpıştığında teknolojik sistemlerde bozulmalar olur; uydu, GPS, telsiz ve elektrik şebekeleri gibi sistemler etkilenebilir. Bu durum bazı meslekleri doğrudan etkiler: pilotlar, çiftçiler, astronotlar, iletişim teknisyenleri gibi...`,
+                'example-chapter-3-title': 'Bölüm 3: Ali Dede’nin Çiftliği',
+                'example-chapter-3-content': `Kağan, hafta sonu dedesi Ali’nin köydeki çiftliğine gitmek için hazırlandı. Abisi Berkay da ona eşlik etti. Yolda giderken Berkay, Kağan’a heyecanla bazı bilgiler gösterdi: “Bak burada yazıyor. Uzay havası tarımda kullanılan *GPS sistemlerini bozabiliyor*. Bu da ekim zamanlarını etkileyebiliyor.” Ali Dede bir süre düşündü, sonra başını sallayarak anlattı: “Geçen yıl hava durumu yağmur gösterdi ama bir damla bile yağmadı. Tarlaya erken gübre attım, hepsi ziyan oldu. Ayrıca bir gün boyunca elektrik kesildi, su motorlarını çalıştıramadım. *Belki sizin dediğiniz gibidir.*”`,
+                'example-chapter-4-title': 'Bölüm 4: Gökyüzü ve Elektrik',
+                'example-chapter-4-content': `Bir sabah Kağan kahvaltı yaparken televizyonda bir haber dikkatini çekti: *“Güneş’te yaşanan patlama nedeniyle bazı uçakların rotaları değiştirildi. Uçak içi iletişimde kısa süreli kopmalar yaşandı. Ayrıca ülkenin kuzey bölgelerinde birkaç saatlik elektrik kesintileri meydana geldi.”* Bu haber Kağan’ın ilgisini daha da artırdı. Okula gider gitmez Fen Bilimleri Öğretmeni Meryem Hanım’a konuyu sordu. Meryem Öğretmen: “Uzay havası, pilotlar için ciddi bir durumdur. Özellikle kutup bölgesine yakın uçuşlarda güneşten gelen *radyasyon seviyesi artabilir*. Bu hem yolcular hem de pilotlar için risklidir. Ayrıca uçakların telsiz sistemleri bozulabilir.” Zeynep: “Yani bir uzay fırtınası sadece gökyüzündeki pilotları değil, yerdeki elektrikleri de etkileyebiliyor öyle mi?” Meryem Öğretmen: “Kesinlikle. Manyetik fırtınalar, elektrik şebekelerini bozarak kesintilere yol açabilir.”`,
+                'example-chapter-5-title': 'Bölüm 5: Astronotlar İçin Uzayda Yaşamak',
+                'example-chapter-5-content': `Kağan, tüm bu bilgileri topladıktan sonra yeniden Alper Gezeravcı ile buluşma fırsatı buldu. Merakla sordu: *“Peki Alper abi, siz uzaydayken uzay havası sizi nasıl etkiledi?”* Alper Gezeravcı, derin bir nefes aldı ve yanıtladı: “Uzayda yaşarken, uzay havası bizim için çok büyük bir risk. Güneş patlamaları sırasında uzay aracının dışına çıkmamız yasaklanır. Bu patlamalar *radyasyon seviyesini arttırır.* Eğer önceden haberimiz olursa, korunaklı bölgelere çekiliriz. Bu yüzden astronotlar görev sırasında sürekli olarak uzay havası tahminlerini takip eder.” Kagan şaşkınlıkla sordu: “Yani uzaydaki tehlike sadece oksijen eksikliği değil, uzay havası da mı?” Alper Gezeravcı: *“Aynen öyle. Uzay havası görünmez ama çok güçlüdür.”*`,
+                'example-chapter-6-title': 'Bölüm 6: Görev Tamamlandı ve Ödül Vakti',
+                'example-chapter-6-content': `Kağan, araştırmalarını tamamladıktan sonra okulda büyük bir sunum yaptılar. Sunum büyük ilgi gördü. Meryem Öğretmen, “Siz bu yaşta böyle işler yapıyorsanız gelecekte çok büyük işler başaracaksınız.” dedi. Sunumdan sonra Alper Gezeravcı yeniden onlarla buluştu. Kağan heyecanla raporunu sundu: “Görev tamamlandı!” Alper Gezeravcı gülümseyerek başını salladı: *“Harika bir iş çıkardınız. Şimdi ödülünüzü hak ettiniz.”*`,
+                'example-chapter-7-title': 'Bölüm 7: Final - Kuzey Işıkları',
+                'example-chapter-7-content': `Alper Gezeravcı, Kağan'a söz verdiği gibi Norveç’e götürdü. Kuzey Kutbu’nda gökyüzünde dans eden *yeşil, mor, kırmızı ışıkları* izlediler. Bu muhteşem olay, Güneş’ten gelen parçacıkların Dünya’nın manyetik alanıyla etkileşime girmesi sonucu oluşuyordu; yani araştırdıkları uzay havasının bir sonucu. Kağan, o an gökyüzüne bakarken şöyle dedi: *“Bilimle hayal birleşince, insan yıldızlara daha da yaklaşabiliyor.”* Alper Gezeravcı ise ekledi: "Astronotlar riskli görüyor olsa da, uzay havası dünyanın en güzel gösterisini de yaratabiliyor." O gece, ikisi de kuzey ışıklarının altında uzayın sonsuzluğunu düşündüler. Kağan'ın astronot olma hayali artık daha da güçlenmişti.`,
+                'read-chapter-btn': '🔊 Oku',
+                'stop-reading-btn': '◼ Durdur',
+            },
+            'en': {
+                'title': 'Space Weather Mission - Berke Demir & Furkan Yıldız',
+                'example-title': 'SPACE WEATHER MISSION',
+                'main-subtitle': 'The mission given by Alper Gezeravcı: The Effect of Space Weather on Professions',
+                'by': 'Author:',
+                'category': 'Category:',
+                'category-space': 'Space',
+                'example-author': 'Berke Demir & Furkan Yıldız',
+                'story-section-title': 'STORY CHAPTERS',
+                'impact-title-main': 'EFFECT OF SPACE WEATHER ON PROFESSIONS',
+                'impact-subtitle': 'Detailed Mission Report',
+                'initial-impact-message': 'Select a profession above to investigate the effects of Space Weather in detail. (View Risk Analysis)',
+                'pilot-title': 'Pilots: Flight Safety and Radiation',
+                'pilot-content': 'The **radiation level from the sun increases**, especially during **flights near the polar region**, which is risky for both passengers and pilots. Additionally, the aircraft\'s **radio systems can malfunction**, requiring route changes.',
+                'farmer-title': 'Farmers: GPS and Agricultural Technology',
+                'farmer-content': 'The **precision GPS systems** used in agriculture can be **disrupted**, which can negatively affect the timing of planting, fertilization, and harvesting.',
+                'astronaut-title': 'Astronauts: Safety in Space',
+                'astronaut-content': 'The **radiation level critically increases** during solar flares. If warned in advance, astronauts must **retreat to shielded areas** within the spacecraft. Therefore, they constantly monitor space weather forecasts.',
+                'comm_tech-title': 'Communication Technicians: Satellite and Grid Failures',
+                'comm_tech-content': 'Can cause **malfunctions and outages** in critical communication and energy infrastructures like **satellite, GPS, radio**, and ground-based **electrical grids**. These systems must be constantly monitored.',
+                'chapter-1-image-caption': 'Kagan dreams of becoming an astronaut while looking at the stars on his balcony.',
+                'chapter-3-image-caption': 'Kagan talks with his grandfather about space weather.', 
+                'chapter-5-image-caption': 'Kagan delivers the file to Alper Gezeravcı.', 
+                'chapter-7-image-caption': 'Kagan and Alper Gezeravcı watch the Northern Lights in awe in Norway.', 
+                'example-chapter-1-title': 'Chapter 1: The Gate to the Sky',
+                'example-chapter-1-content': `Kagan, a 12-year-old boy, was exceedingly curious. At night, he would sit on the balcony, gaze at the sky, and dream. The stars felt like friends to him. His biggest dream was to one day become an astronaut and go beyond the sky. One day, his heart started pounding when he saw a news report on TV. Alper Gezeravcı, Turkey's first astronaut, had returned from his space mission and was going to give a public conference in Istanbul. At the end of the talk, Kagan mustered his courage, went up to Alper Gezeravcı, and asked: “Alper brother, what exactly is space weather? And how does it affect our world?” Alper Gezeravcı gave Kagan a special mission: *Investigate how space weather affects different professions!*`,
+                'example-chapter-2-title': 'Chapter 2: The Scientific Adventure Begins',
+                'example-chapter-2-content': `Kagan couldn't sleep that night due to excitement. He woke up early the next morning and started researching on his computer. He read scientific articles, watched videos, and took notes. According to his research, space weather consists of energy and particle currents resulting from solar flares. When these particles collide with the Earth's magnetic field, they cause disruptions in technological systems; systems like satellites, GPS, radio, and electrical grids can be affected. This situation directly impacts some professions: pilots, farmers, astronauts, communication technicians, and others...`,
+                'example-chapter-3-title': 'Chapter 3: Grandpa Ali’s Farm',
+                'example-chapter-3-content': `Kağan prepared to go to his grandfather Ali's farm in the village for the weekend. His older brother, Berkay, accompanied him. On the way, Kagan excitedly showed Berkay some information: "Look, it says here. Space weather can disrupt GPS systems used in agriculture. This can also affect planting times." Grandfather Ali thought for a while, then nodded and explained: "Last year, the weather forecast showed rain, but not a single drop fell. I applied fertilizer to the field early, and it all went to waste. Also, the power went out for a day, and I couldn't start the water engines. *Maybe it's like you said.*"`,
+                'example-chapter-4-title': 'Chapter 4: Sky and Electricity',
+                'example-chapter-4-content': `One morning while Kagan was having breakfast, a news report caught his attention: *“Due to a solar flare, the routes of some airplanes were changed. Short-term communication outages were experienced on board. Furthermore, several hours of power outages occurred in the northern regions of the country.”* This news increased Kagan's interest even further. As soon as he arrived at school, he asked his Science Teacher, Ms. Meryem, about the topic. Ms. Meryem said: “Space weather is a serious matter for pilots. Especially during flights near the polar region, the *radiation level from the sun can increase*. This is risky for both passengers and pilots. Also, the aircraft's radio systems can malfunction.” Zeynep asked: “So a space storm can affect not only pilots in the sky but also electricity on the ground?” Ms. Meryem: “Absolutely. Magnetic storms can disrupt electrical grids and cause outages.”`,
+                'example-chapter-5-title': 'Chapter 5: Living in Space for Astronauts',
+                'example-chapter-5-content': `After gathering all this information, Kagan found an opportunity to meet with Alper Gezeravcı again. He eagerly asked: *“So Alper brother, how did space weather affect you when you were in space?”* Alper Gezeravcı, deep a breath and replied: "Living in space, space weather poses a huge risk to us. We're forbidden from leaving the spacecraft during solar flares. These flares increase radiation levels. If we know in advance, we retreat to sheltered areas. That's why astronauts constantly monitor space weather forecasts during missions." Zeynep asked in surprise, "So the danger in space isn't just oxygen deprivation, but space weather as well?" Alper Gezeravcı: "Exactly. Space weather is invisible but very strong."`,
+                'example-chapter-6-title': 'Chapter 6: Mission Complete and Reward Time',
+                'example-chapter-6-content': `Kagan completed their research and gave a big presentation at school. The presentation received great interest. Ms. Meryem Teacher said, "If you are doing such things at this age, you will achieve very great things in the future." After the presentation, Alper Gezeravcı met with them again. Kagan excitedly presented his report: "Mission complete!" Alper Gezeravcı smiled and nodded: *“You did a fantastic job. Now you've earned your reward.”*`,
+                'example-chapter-7-title': 'Chapter 7: Finale - Northern Lights',
+                'example-chapter-7-content': `As promised, Alper Gezeravcı took Kağan to Norway. They watched the green, purple, and red lights dancing in the sky over the North Pole. This spectacular phenomenon was caused by particles from the Sun interacting with the Earth's magnetic field—a result of the space weather they were researching. As Kağan gazed at the sky, he said, "When science and imagination combine, humans can get even closer to the stars." Alper Gezeravcı added, "Although astronauts may consider it risky, space weather can also create the most beautiful spectacle in the world." That night, they both contemplated the vastness of space under the northern lights. Kağan's dream of becoming an astronaut had now grown even stronger.`,
+                'read-chapter-btn': '🔊 Oku',
+                'stop-reading-btn': '◼ Durdur',
+            }
+        };
+
+        let currentLang = localStorage.getItem('lang') || 'tr';
+        document.documentElement.lang = currentLang;
+        
+        const professions = [
+            { key: 'pilot', tr: 'Pilotlar', en: 'Pilots' },
+            { key: 'farmer', tr: 'Çiftçiler', en: 'Farmers' },
+            { key: 'astronaut', tr: 'Astronotlar', en: 'Astronauts' },
+            { key: 'comm_tech', tr: 'İletişim Teknisyenleri', en: 'Comm. Techs' }
+        ];
+
+        const professionRiskLevels = { 'pilot': 70, 'farmer': 40, 'astronaut': 90, 'comm_tech': 65 };
+        
+        // ====================================================================
+        // YENİ: METİN SESLENDİRME (TEXT-TO-SPEECH) FONKSİYONLARI
+        // ====================================================================
+
+        let currentUtterance = null;
+        let readingButton = null;
+        let availableVoices = []; // Mevcut sesleri tutacak global değişken
+
+        // SESLERİ YÜKLEME FONKSİYONU
+        function loadVoices() {
+            // Sesleri hemen almayı dener
+            availableVoices = window.speechSynthesis.getVoices();
+            
+            // Eğer liste boşsa, seslerin yüklenmesini bekle (tarayıcı davranışı)
+            if (availableVoices.length === 0) {
+                window.speechSynthesis.onvoiceschanged = () => {
+                    availableVoices = window.speechSynthesis.getVoices();
+                    console.log("TTS: Sesler yüklendi:", availableVoices.length);
+                };
+            }
+        }
+        
+        function readChapter(content, lang, button) {
+            stopReading(); // Önceki okumayı durdur
+
+            readingButton = button;
+            
+            if ('speechSynthesis' in window) {
+                
+                // Ses listesi boşsa tekrar yüklemeyi dene
+                if (availableVoices.length === 0) {
+                    loadVoices();
+                }
+
+                currentUtterance = new SpeechSynthesisUtterance(content);
+                
+                // Hedef dil kodunu belirle
+                const targetShortLang = lang === 'en' ? 'en' : 'tr'; 
+                const targetLangCode = lang === 'en' ? 'en-US' : 'tr-TR'; 
+
+                // EN İYİ SESİ SEÇME MANTIĞI
+                let selectedVoice = null;
+                
+                // 1. Önce tam eşleşen dil kodu ara (e.g., 'en-US' or 'tr-TR')
+                selectedVoice = availableVoices.find(voice => voice.lang === targetLangCode);
+                
+                // 2. Tam eşleşme bulunamazsa, sadece dilin başlangıcını ara (e.g., 'en' for 'en-GB', 'en-AU')
+                if (!selectedVoice) {
+                    selectedVoice = availableVoices.find(voice => voice.lang.startsWith(targetShortLang));
+                }
+                
+                // Sesi ayarla
+                if (selectedVoice) {
+                    currentUtterance.voice = selectedVoice;
+                    currentUtterance.lang = selectedVoice.lang; // Bulunan sesin dilini kullan
+                    console.log(`TTS: ${lang} için seçilen ses: ${selectedVoice.name} (${selectedVoice.lang})`);
+                } else {
+                     // Ses bulunamazsa, sadece dil kodunu ayarla (tarayıcının varsayılanı kullanması için)
+                    currentUtterance.lang = targetLangCode; 
+                    console.warn(`TTS: ${lang} için uygun ses bulunamadı. Varsayılan ses kullanılıyor.`);
+                    alert(`UYARI: ${lang.toUpperCase()} sesi bulunamadı. Lütfen cihazınızın ayarlarından bir İngilizce ses paketi indirin.`);
+                    return false; // <-- Okuma denemesini durdur.
+                }
+
+                currentUtterance.rate = 1.0; // Okuma hızı
+                currentUtterance.pitch = 1.0; // Ses perdesi (pitch)
+
+                // Buton durumunu güncelle
+                readingButton.classList.add('active-reading');
+                readingButton.textContent = translations[currentLang]['stop-reading-btn'];
+
+                currentUtterance.onend = () => {
+                    stopReading(false); // Okuma bittiğinde butonu sıfırla
+                };
+                currentUtterance.onerror = (event) => {
+                    console.error('Speech Synthesis Error:', event.error);
+                    stopReading(false);
+                };
+
+                window.speechSynthesis.speak(currentUtterance);
+                return true;
+            } else {
+                alert("Üzgünüm, tarayıcınız Metin Seslendirme (Text-to-Speech) özelliğini desteklemiyor.");
+                return false;
+            }
+        }
+
+        function stopReading(isUserInitiated = true) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                currentUtterance = null;
+            }
+            // Butonun durumunu sıfırla
+            if (readingButton) {
+                const readBtnText = translations[currentLang]['read-chapter-btn'];
+                readingButton.classList.remove('active-reading');
+                readingButton.textContent = readBtnText;
+                readingButton = null;
+            }
+        }
+        
+        // DÜZELTME YAPILAN FONKSİYON: Artık content yerine butonu alıp içeriği translations objesinden çekiyor.
+        function toggleReading(button) { 
+            playClickSound();
+            
+            // 1. Chapter Key'i al
+            const chapterKey = button.getAttribute('data-chapter-key');
+            if (!chapterKey) {
+                console.error("TTS: Chapter anahtarı bulunamadı.");
+                return;
+            }
+            
+            // 2. İçeriği, o anki dil ve anahtarla translations'dan çek
+            const contentKey = `${chapterKey}-content`;
+            const chapterContent = translations[currentLang][contentKey];
+            
+            if (!chapterContent) {
+                console.error(`TTS: İçerik anahtarı ${contentKey} bulunamadı.`);
+                return;
+            }
+
+            if (button.classList.contains('active-reading')) {
+                // Şu anda bu buton aktifse (yani okuma yapılıyorsa), durdur
+                stopReading();
+            } else {
+                // Yeni okumayı başlat
+                
+                // readChapter fonksiyonunu güncel content ile çağır
+                if (readChapter(chapterContent, currentLang, button) === false) {
+                    // Ses bulunamadığı için okuma başarısız olursa butonu sıfırla
+                    if (button) {
+                        const readBtnText = translations[currentLang]['read-chapter-btn'];
+                        button.classList.remove('active-reading');
+                        button.textContent = readBtnText;
+                    }
+                }
+            }
+        }
+        
+        // ====================================================================
+        // TEMEL FONKSİYONLAR (Çeviri ve İçerik Yönetimi)
+        // ====================================================================
+
+        function applyTranslations(lang) {
+            // Dil değiştiğinde seslendirmeyi durdur
+            stopReading(); 
+            
+            const elements = document.querySelectorAll('[data-key]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-key');
+                if (translations[lang] && translations[lang][key]) {
+                    if (element.tagName === 'TITLE') {
+                        document.title = translations[lang][key];
+                    }
+                    else {
+                        element.textContent = translations[lang][key];
+                    }
+                }
+            });
+
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeBtn = document.querySelector(`.lang-btn[onclick*="toggleLanguage('${lang}')"]`);
+            if(activeBtn) activeBtn.classList.add('active');
+
+            displayStoryChapters();
+            createProfessionButtons();
+            enable3DTilt(); 
+        }
+
+        function toggleLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('lang', lang);
+            document.documentElement.lang = lang; 
+            applyTranslations(lang);
+        }
+
+        const exampleChapterKeys = [
+            'example-chapter-1', 'example-chapter-2', 'example-chapter-3', 
+            'example-chapter-4', 'example-chapter-5', 'example-chapter-6', 'example-chapter-7', 
+        ];
+
+        function getProfessionImpactSectionHTML() {
+            const impactTitle = translations[currentLang]['impact-title-main'];
+            const impactSubtitle = translations[currentLang]['impact-subtitle'];
+
+            return `
+                <section id="profession-impact-section" class="profession-impact-section">
+                    <div class="story-header">
+                        <h3 class="story-title">${impactTitle}</h3>
+                        <p>${impactSubtitle}</p>
+                    </div>
+                    
+                    <div id="profession-buttons" class="profession-buttons"></div>
+                    <div id="impact-display" class="impact-content"></div>
+                </section>
+            `;
+        }
+        
+        function displayStoryChapters() {
+            const container = document.getElementById('chaptersContainer');
+            if (!container) return;
+            
+            container.innerHTML = ''; 
+            
+            exampleChapterKeys.forEach((key, index) => {
+                const titleKey = `${key}-title`;
+                const contentKey = `${key}-content`;
+                const chapterTitle = translations[currentLang][titleKey] || translations['tr'][titleKey];
+                const chapterContent = translations[currentLang][contentKey] || translations['tr'][contentKey];
+                
+                // Okuma butonu için metinler
+                const readBtnText = translations[currentLang]['read-chapter-btn'];
+
+                const chapterDiv = document.createElement('div');
+                chapterDiv.className = 'chapter';
+                chapterDiv.id = `chapter-${index + 1}`; 
+                
+                // HTML için **strong** ve *em* etiketlerine çevir
+                const formattedContent = chapterContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
+                
+                // DÜZELTME: Artık metin kaçışına gerek yok, sadece anahtarı data attribute olarak atıyoruz.
+                // const sanitizedContent = chapterContent.replace(/'/g, "\\'").replace(/"/g, '\\"'); // KALDIRILDI
+                
+                // Bölüm içeriği ve okuma butonu HTML'i
+                chapterDiv.innerHTML = `
+                    <h4 class="chapter-header">${chapterTitle}</h4>
+                    <p class="chapter-content">${formattedContent}</p>
+                    <div style="margin-top: 20px; text-align: right;">
+                        <button 
+                            class="read-tts-btn" 
+                            data-chapter-key="${key}"
+                            onclick="toggleReading(this)">
+                            ${readBtnText}
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(chapterDiv);
+
+                // =================================================
+                // BÖLÜM 5 RESİM YERLEŞİM KODU
+                // =================================================
+                if (index === 4) { // Bölüm 5'in (index 4) altına yerleştir
+                    const caption = translations[currentLang]['chapter-5-image-caption'] || translations['tr']['chapter-5-image-caption'];
+                    const imageSpotHtml = `
+                        <div class="chapter-image-spot">
+                            <img src="alper.jpg" alt="${caption}" loading="lazy">
+                            <p class="image-caption">${caption}</p>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', imageSpotHtml);
+                }
+                // =================================================
+                
+                if (index === 0) {
+                    const caption = translations[currentLang]['chapter-1-image-caption'] || translations['tr']['chapter-1-image-caption'];
+                    const imageSpotHtml = `
+                        <div class="chapter-image-spot">
+                            <img src="kagan.jpg" alt="${caption}" loading="lazy">
+                            <p class="image-caption">${caption}</p>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', imageSpotHtml);
+                }
+
+                if (index === 2) { 
+                    const caption = translations[currentLang]['chapter-3-image-caption'] || translations['tr']['chapter-3-image-caption'];
+                    const imageSpotHtml = `
+                        <div class="chapter-image-spot">
+                            <img src="dede-kagan.jpg" alt="${caption}" loading="lazy">
+                            <p class="image-caption">${caption}</p>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', imageSpotHtml);
+                }
+
+                if (index === 6) { 
+                    const caption = translations[currentLang]['chapter-7-image-caption'] || translations['tr']['chapter-7-image-caption'];
+                    const imageSpotHtml = `
+                        <div class="chapter-image-spot">
+                            <img src="kuzey-isiklari.jpg" alt="${caption}" loading="lazy">
+                            <p class="image-caption">${caption}</p>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', imageSpotHtml);
+                }
+
+                if (index === 1) { 
+                    container.insertAdjacentHTML('beforeend', getProfessionImpactSectionHTML());
+                    createProfessionButtons();
+                }
+            });
+        }
+        
+        // ====================================================================
+        // DİNAMİK ÖZELLİK FONKSİYONLARI (KAYBOLANLAR)
+        // ====================================================================
+        
+        // YILDIZLARI OLUŞTURMA (Stars)
+        function createStars() {
+            const starsContainer = document.getElementById('stars-container');
+            if (!starsContainer) return;
+            const starCount = 100;
+            const sizes = ['small', 'medium', 'large'];
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = `star ${sizes[Math.floor(Math.random() * sizes.length)]}`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.animationDelay = `${Math.random() * 3}s`;
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        // 3D TILT EFEKTİ (chapter kartları)
+        function enable3DTilt() {
+            const chapters = document.querySelectorAll('.chapter');
+            chapters.forEach(chapter => {
+                chapter.addEventListener('mousemove', (e) => {
+                    const rect = chapter.getBoundingClientRect();
+                    const x = e.clientX - rect.left; 
+                    const y = e.clientY - rect.top; 
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateY = (x - centerX) / 20; 
+                    const rotateX = (centerY - y) / 20; 
+                    chapter.style.setProperty('--rotateX', `${rotateX}deg`);
+                    chapter.style.setProperty('--rotateY', `${rotateY}deg`);
+                });
+                chapter.addEventListener('mouseleave', () => {
+                    chapter.style.setProperty('--rotateX', '0deg');
+                    chapter.style.setProperty('--rotateY', '0deg');
+                });
+            });
+        }
+        
+        // PARALLAX SCROLL (Arka Plan)
+        function enableParallaxScroll() {
+            const background = document.querySelector('.space-background');
+            const stars = document.querySelector('.stars');
+            const grid = document.querySelector('.grid-overlay');
+            
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                if (background) background.style.transform = `translateY(${scrollY * 0.1}px)`;
+                if (stars) stars.style.transform = `translateY(${scrollY * 0.2}px)`;
+                if (grid) grid.style.transform = `translateY(${scrollY * 0.3}px)`;
+            });
+        }
+        
+        // HUD ZAMAN GÜNCELLEMESİ
+        function updateTimeHUD() {
+            const now = new Date();
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            const dateOptions = { year: 'numeric', month: 'short', day: '2-digit' };
+            const timeString = now.toLocaleTimeString('tr-TR', timeOptions);
+            const dateString = now.toLocaleDateString('tr-TR', dateOptions).toUpperCase();
+            
+            const hudElement = document.getElementById('hud-time-date');
+            
+            if (hudElement) {
+                hudElement.innerHTML = `
+                    <div>SYSTEM TIME</div>
+                    ${dateString} ${timeString}
+                `;
+            }
+        }
+        
+        // GÖREV İLERLEME TAKİPÇİSİ
+        function updateProgressTracker() {
+            const chapters = document.querySelectorAll('.chapter');
+            const totalChapters = exampleChapterKeys.length;
+            let currentChapter = 0;
+
+            chapters.forEach((chapter, index) => {
+                const rect = chapter.getBoundingClientRect();
+                if (rect.top <= window.innerHeight * 0.3) {
+                    currentChapter = index + 1;
+                }
+            });
+
+            const progressTextElement = document.getElementById('progress-text');
+            if (progressTextElement) {
+                const progressText = (translations[currentLang]['story-section-title'] === 'HİKAYE BÖLÜMLERİ') ? 'BÖLÜM' : 'CHAPTER';
+                progressTextElement.textContent = `${progressText} ${Math.min(currentChapter, totalChapters)} / ${totalChapters}`;
+            }
+        }
+
+        // HOLOGRAFİK GRAFİK VE BUTON YÖNETİMİ
+        function generateHolographicChart(riskLevel) {
+            const riskColor = riskLevel >= 80 ? '#ff0000' : riskLevel >= 50 ? '#ffff00' : '#00ff00';
+            setTimeout(() => {
+                const chart = document.querySelector('.holographic-chart');
+                const bar = document.querySelector('.risk-bar');
+                const label = document.querySelector('.risk-label');
+                if (chart && bar && label) {
+                    chart.style.setProperty('--risk-color', riskColor);
+                    bar.style.setProperty('--risk-color', riskColor);
+                    bar.style.setProperty('--risk-height', `${riskLevel}%`);
+                    label.style.setProperty('--risk-color', riskColor);
+                }
+            }, 50); 
+            return `
+                <div class="holographic-chart" style="--risk-color: ${riskColor};">
+                    <div class="risk-bar" style="--risk-height: 0%;"></div>
+                    <div class="risk-label">${riskLevel}%</div>
+                </div>
+            `;
+        }
+        
+        function showImpact(professionKey) {
+            playClickSound(); 
+            const impactDisplay = document.getElementById('impact-display');
+            const titleKey = `${professionKey}-title`;
+            const contentKey = `${professionKey}-content`;
+            
+            const title = translations[currentLang][titleKey];
+            const content = translations[currentLang][contentKey];
+            const riskLevel = professionRiskLevels[professionKey];
+            
+            document.querySelectorAll('.profession-btn').forEach(btn => btn.classList.remove('active'));
+            const activeButton = document.querySelector(`.profession-btn[data-profession="${professionKey}"]`);
+            if (activeButton) activeButton.classList.add('active');
+            
+            let formattedContent = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formattedContent = formattedContent.replace(/\*(.*?)\*/g, '<em>$1</em>'); 
+            
+            impactDisplay.innerHTML = `
+                <div class="impact-text">
+                    <h3>${title}</h3>
+                    <p>${formattedContent}</p>
+                </div>
+                ${generateHolographicChart(riskLevel)}
+            `;
+        }
+
+        function createProfessionButtons() {
+            const buttonContainer = document.getElementById('profession-buttons');
+            const impactDisplay = document.getElementById('impact-display');
+            if (!buttonContainer || !impactDisplay) return;
+            
+            buttonContainer.innerHTML = ''; 
+            
+            professions.forEach(p => {
+                const button = document.createElement('button');
+                button.className = 'profession-btn';
+                button.textContent = p[currentLang] || p['tr'];
+                button.setAttribute('data-profession', p.key);
+                button.onclick = () => showImpact(p.key);
+                buttonContainer.appendChild(button);
+            });
+            
+            const initialMessage = translations[currentLang]['initial-impact-message'] || translations['tr']['initial-impact-message'];
+            impactDisplay.innerHTML = `<div class="impact-text" style="width: 100%; text-align: center;"><p>${initialMessage}</p></div>`;
+        }
+
+        // ====================================================================
+        // İLK ÇALIŞTIRMA
+        // ====================================================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // TTS seslerini yüklemeyi başlat
+            loadVoices(); 
+
+            // Yıldızlar ve Parallax başlatılıyor
+            createStars();
+            enableParallaxScroll();
+
+            // HUD Zamanı başlatılıyor
+            updateTimeHUD();
+            setInterval(updateTimeHUD, 1000); 
+
+            // Tüm çevirileri uygula ve içeriği oluştur
+            applyTranslations(currentLang); 
+            
+            // İlerleme takipçisi başlatılıyor
+            updateProgressTracker(); 
+            window.addEventListener('scroll', updateProgressTracker);
+
+            // Müzik objesini al
+            bgMusic = document.getElementById('bg-music');
+            if (bgMusic) {
+                bgMusic.volume = 0.3; // Sesi baştan kıs
+                bgMusic.play().catch(() => {
+                    // Otomatik başlatma başarısız olursa butona tıklandığında çalışacaktır.
+                });
+            }
+        });
+    </script>
+</body>
+</html>
